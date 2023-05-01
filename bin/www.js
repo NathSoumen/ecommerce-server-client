@@ -4,30 +4,67 @@
  * Module dependencies.
  */
 
-var app = require('../app');
 var debug = require('debug')('ecommerce-server-client:server');
 var http = require('http');
-
+const cluster = require('cluster')
+const {Server} = require('socket.io');
+const { createAdapter, setupPrimary } = require('@socket.io/cluster-adapter');
+const { setupWorker, setupMaster } = require('@socket.io/sticky');
+const numCPUs = require('os').cpus
 /**
  * Get port from environment and store in Express.
  */
 
 var port = normalizePort(process.env.PORT || '3000');
-app.set('port', port);
 
 /**
  * Create HTTP server.
  */
 
-var server = http.createServer(app);
+if(cluster.isMaster) {
 
+  const httpServer = http.createServer()
+setupMaster(httpServer,{
+  loadBalancingMethod:'least-connection'
+})
+setupPrimary()
+
+cluster.setupMaster({serialization:'advance'})
+
+for (let i = 0; i < numCPUs; i++) {
+cluster.fork()  
+}
+}else {  
+  const  {app,setupRotes} = require('../app');
+  const httpServer = http.Server(app)
+  const io = new Server (httpServer,{
+    cors:{
+      origin:true,
+      credentials:true
+    },
+    transports:['websocket']
+  })
+io.adapter(createAdapter())
+setupWorker(io)
+setupRotes(app,io)
+app.set('port', port);
 /**
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port);
-server.on('error', onError);
-server.on('listening', onListening);
+httpServer.listen(port,(err)=>{
+  if(err){
+    console.error(err)
+  }else {
+    console.log("Server is running at port"+port);
+  }
+});
+httpServer.on('error', onError);
+httpServer.on('listening', onListening);
+
+}
+
+
 
 /**
  * Normalize a port into a number, string, or false.
