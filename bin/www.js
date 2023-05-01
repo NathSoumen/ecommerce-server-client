@@ -21,77 +21,54 @@ var port = normalizePort(process.env.PORT || '3000');
  * Create HTTP server.
  */
 
-if(cluster.isMaster) {
-
-  const httpServer = http.createServer()
-setupMaster(httpServer,{
-  loadBalancingMethod:'least-connection'
-})
-setupPrimary()
-
-cluster.setupMaster({serialization:'advance'})
-
-for (let i = 0; i < numCPUs; i++) {
-cluster.fork()  
-}
-}else {  
-  const  {app,setupRotes} = require('../app');
-  const httpServer = http.Server(app)
-  const io = new Server (httpServer,{
-    cors:{
-      origin:true,
-      credentials:true
-    },
-    transports:['websocket']
-  })
-io.adapter(createAdapter())
-setupWorker(io)
-setupRotes(app,io)
-app.set('port', port);
-/**
- * Listen on provided port, on all network interfaces.
- */
-
-httpServer.listen(port,(err)=>{
-  if(err){
-    console.error(err)
-  }else {
-    console.log("Server is running at port"+port);
-  }
-});
-httpServer.on('error', onError);
-httpServer.on('listening', onListening);
-
-}
 
 
+if (cluster.isMaster) {
+  console.log(`Master ${process.pid} is running`);
 
-/**
- * Normalize a port into a number, string, or false.
- */
+  const httpServer = http.createServer();
 
-function normalizePort(val) {
-  var port = parseInt(val, 10);
+  // setup sticky sessions
+  setupMaster(httpServer, {
+    loadBalancingMethod: "least-connection",
+  });
 
-  if (isNaN(port)) {
-    // named pipe
-    return val;
-  }
+  // setup connections between the workers
+  setupPrimary();
 
-  if (port >= 0) {
-    // port number
-    return port;
-  }
+  // needed for packets containing buffers (you can ignore it if you only send plaintext objects)
+  // Node.js < 16.0.0
+  cluster.setupMaster({
+    serialization: "advanced",
+  });
+  
 
-  return false;
-}
 
-/**
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();  }
+
+  cluster.on("exit", (worker) => {
+    console.log(`Worker ${worker.process.pid} died`);
+    cluster.fork();
+  });
+
+  httpServer.listen(port,(err)=>{
+    if(err){
+      console.error(err)
+    }else {
+      console.log("Server is running at port"+port);
+    }
+  });
+  httpServer.on('error', onError);
+  httpServer.on('listening', onListening);
+
+  /**
  * Event listener for HTTP server "error" event.
  */
 
 function onError(error) {
   if (error.syscall !== 'listen') {
+    console.error(error);
     throw error;
   }
 
@@ -119,9 +96,55 @@ function onError(error) {
  */
 
 function onListening() {
-  var addr = server.address();
+  var addr = httpServer.address();
   var bind = typeof addr === 'string'
     ? 'pipe ' + addr
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
 }
+} else { 
+  
+  console.log(`Worker ${process.pid} started`);
+
+  const  {app,setupRotes} = require('../app');
+  const httpServer = http.createServer(app)
+  const io = new Server (httpServer,{
+    cors:{
+      origin:true,
+      credentials:true
+    },
+    transports:['websocket']
+  })
+io.adapter(createAdapter())
+setupWorker(io)
+setupRotes(app,io)
+app.set('port', port);
+io.on("connection", (socket) => {
+  /* ... */
+});
+
+}
+
+
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val) {
+  var port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
+
+
