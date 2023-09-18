@@ -30,7 +30,7 @@ async function login(req, res, next) {
 
           const token = jwt.sign(userData, secretKey, { expiresIn });
           console.log("Password is correct.");
-          return res.status(200).json({success:true,data:token})
+          return res.status(200).json({ success: true, data: token });
         }
       });
     } else {
@@ -42,25 +42,27 @@ async function login(req, res, next) {
 }
 async function register(req, res, next) {
   try {
-    const { username, email, password } = req.body;
-    if (!email || !password) {
+    const { username, email, password ,mobile} = req.body;
+    console.log({ username, email, password ,mobile})
+    if (!email || !password || !mobile || !username) {
       throw new Error("Email Or Password is missing");
     }
-    const user = await userModel.findOne({email:email});
-    if(user) {
-      return res.status(400).json({ succss: false, msg:"Email is already exists" });
+    const user = await userModel.findOne({ email: email });
+    if (user) {
+      return res
+        .status(400)
+        .json({ succss: false, msg: "Email is already exists" });
+    } else {
+      // Hash the user's password
+      const hashedPassword = await bcrypt.hash(password, 10);
 
-    }else {
-    // Hash the user's password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create a new user document and save it to the database
-    const newUser = new userModel({
-      username,
-      email,
-      password: hashedPassword,
-    });
-    await newUser.save();
+      // Create a new user document and save it to the database
+      const newUser = new userModel({
+        username,
+        email,
+        password: hashedPassword,
+      });
+      await newUser.save();
     }
     return res.status(200).json({ succss: true, data: newUser });
   } catch (error) {
@@ -71,5 +73,5 @@ async function register(req, res, next) {
 module.exports = {
   getAllUsers: getAllUsers,
   login: login,
-  register:register
+  register: register,
 };

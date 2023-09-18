@@ -22,6 +22,19 @@ mongoose.connect(dbURI, {
 
   err => {console.error(err); }
 );
+
+
+mongoose.connection.on("disconnected", () => {
+  console.log("Mongoose disconnected");
+});
+
+// Gracefully close the Mongoose connection when the Node.js process is terminated
+process.on("SIGINT", () => {
+  mongoose.connection.close(() => {
+    console.log("Mongoose disconnected through app termination");
+    process.exit(0);
+  });
+});
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "jade");
