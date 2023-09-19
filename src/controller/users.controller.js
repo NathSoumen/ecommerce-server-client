@@ -42,8 +42,8 @@ async function login(req, res, next) {
 }
 async function register(req, res, next) {
   try {
-    const { username, email, password ,mobile} = req.body;
-    console.log({ username, email, password ,mobile})
+    const { username, email, password, mobile } = req.body;
+    console.log({ username, email, password, mobile });
     if (!email || !password || !mobile || !username) {
       throw new Error("Email Or Password is missing");
     }
@@ -60,11 +60,12 @@ async function register(req, res, next) {
       const newUser = new userModel({
         username,
         email,
+        mobile,
         password: hashedPassword,
       });
       await newUser.save();
+      return res.status(200).json({ succss: true, data: newUser });
     }
-    return res.status(200).json({ succss: true, data: newUser });
   } catch (error) {
     return res.status(500).json({ succss: false, data: [], error });
   }

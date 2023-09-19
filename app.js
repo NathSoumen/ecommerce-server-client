@@ -47,8 +47,10 @@ app.use(express.static(path.join(__dirname, "public")));
 
 
 var usersRouter = require("./src/routes/users.routes");
+var fetchExternalData = require("./src/routes/fetchExternalData.routes");
 
 app.use("/users", usersRouter);
+app.use("/fetchExternalData", fetchExternalData);
 
 
 // catch 404 and forward to error handler
