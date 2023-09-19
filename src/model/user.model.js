@@ -12,11 +12,11 @@ const userSchema = new mongoose.Schema({
     unique: true,
     required: true,
   },
-  country: {
-    type: String,
-    unique: true,
-    required: true,
-  },
+  // country: {
+  //   type: String,
+  //   unique: true,
+  //   required: true,
+  // },
   email: {
     type: String,
     unique: true,
@@ -36,6 +36,8 @@ userSchema.pre('save', async function (next) {
     }
 
     const hashedPassword = await bcrypt.hash(this.password, 10);
+    console.log("hashedPassword",hashedPassword);
+
     this.password = hashedPassword;
     next();
   } catch (error) {
@@ -44,8 +46,9 @@ userSchema.pre('save', async function (next) {
 });
 
 // Method to compare a given password with the stored hashed password
-userSchema.methods.comparePassword = function (candidatePassword, callback) {
-  bcrypt.compare(candidatePassword, this.password, (err, isMatch) => {
+userSchema.methods.comparePassword =  (candidatePassword,hash, callback) =>{
+  console.log(candidatePassword,'this.password',this.password);
+  bcrypt.compare(candidatePassword, hash, (err, isMatch) => {
     if (err) return callback(err);
     callback(null, isMatch);
   });
