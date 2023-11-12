@@ -10,18 +10,18 @@ const dbURI = process.env.MONGODB_URI;
 
 var app = express();
 
-// require('./src/database/db')()
+require('./src/database/db')()
 
-mongoose.connect(dbURI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(
-  () => { /** ready o use. The `mongoose.connect()` promise resolves to mongoose instance. */ 
-  console.log(`Mongoose connected to ${dbURI}`);
-},
+// mongoose.connect(dbURI, {
+//   useNewUrlParser: true,
+//   useUnifiedTopology: true,
+// }).then(
+//   () => { /** ready o use. The `mongoose.connect()` promise resolves to mongoose instance. */ 
+//   console.log(`Mongoose connected to ${dbURI}`);
+// },
 
-  err => {console.error(err); }
-);
+//   err => {console.error(err); }
+// );
 
 
 mongoose.connection.on("disconnected", () => {
@@ -47,9 +47,11 @@ app.use(express.static(path.join(__dirname, "public")));
 
 
 var usersRouter = require("./src/routes/users.routes");
+var productRoutes = require("./src/routes/product.routes");
 var fetchExternalData = require("./src/routes/fetchExternalData.routes");
 
 app.use("/users", usersRouter);
+app.use("/items", productRoutes);
 app.use("/fetchExternalData", fetchExternalData);
 
 

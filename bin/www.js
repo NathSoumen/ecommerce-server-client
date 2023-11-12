@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-
+require('dotenv').config()
 const debug = require("debug")("ecommerce-server-client:server");
 const http = require("http");
 const cluster = require("cluster");
@@ -9,7 +9,7 @@ const { setupWorker, setupMaster } = require("@socket.io/sticky");
 const os = require("os");
 const logger = require("../src/utilities/logger/loger.util");
 
-const numCPUs = os.cpus().length;
+const numCPUs = process.env.CPU;
 const port = normalizePort(process.env.PORT || "3000");
 
 if (cluster.isMaster) {
