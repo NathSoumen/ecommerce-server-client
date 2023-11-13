@@ -30,7 +30,7 @@ async function login(req, res, next) {
 
           const token = jwt.sign({email:user.email}, secretKey, { expiresIn });
           console.log("Password is correct.");
-          return res.status(200).json({ success: true, data:{email:user.email,mobile:user.mobile}, token });
+          return res.status(200).json({ success: true, data:{email:user.email,mobile:user.mobile,username:user.username}, token });
         }
       });
     } else {
