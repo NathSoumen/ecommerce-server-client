@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-require('dotenv').config()
+require("dotenv").config();
 const debug = require("debug")("ecommerce-server-client:server");
 const http = require("http");
 const cluster = require("cluster");
@@ -10,11 +10,11 @@ const os = require("os");
 const logger = require("../src/utilities/logger/loger.util");
 
 const numCPUs = process.env.CPU;
-const port = normalizePort(process.env.PORT || "3000");
+const port = normalizePort(process.env.PORT || 3000);
 
 if (cluster.isMaster) {
   console.log(`Master cluster setting up ${numCPUs} workers...`);
-  const  app  = require("../app");
+  const app = require("../app");
   const httpServer = http.createServer(app);
 
   setupMaster(httpServer, {
