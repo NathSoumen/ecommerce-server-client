@@ -15,18 +15,23 @@ const productSchema = new mongoose.Schema(
       ref: "Users",
     },
   },
-  { timestamps: true, virtuals: false }
+  {
+    timestamps: true,
+    virtuals: true,
+    toObject: { virtuals: true },
+    toJSON: { virtuals: true },
+  }
 );
 productSchema.virtual("price", {
   ref: "productPrice",
   localField: "_id",
   foreignField: "product",
 });
-productSchema.virtual("user", {
-  ref: "Users",
-  localField: "sellerId",
-  foreignField: "_id",
-});
+// productSchema.virtual("user", {
+//   ref: "Users",
+//   localField: "sellerId",
+//   foreignField: "_id",
+// });
 // Create the User model
 const product = mongoose.model("product", productSchema);
 

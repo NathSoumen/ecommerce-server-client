@@ -4,8 +4,36 @@ const productPriceModel = require("../model/prododuct-price.model");
 
 async function getProducts(req, res, next) {
   try {
-    const products = await productModel.find({}).populate(["price"]);
+    const products = await productModel
+      .find({})
+      .populate({
+        path: "sellerId",
+        select: "email username mobile _id",
+      })
+      .populate("price")
+      .exec();
     return res.status(200).json({ success: true, data: products });
+  } catch (err) {
+    return res.status(500).json({ success: false, err });
+  }
+}
+async function productDetails(req, res, next) {
+  try {
+    const { pid } = req.params;
+    if (!pid) {
+      throw Error("pid is missing");
+    }
+    const product = await productModel
+      .findOne({ _id: pid })
+      .populate({
+        path: "sellerId",
+        select: "email username mobile _id",
+      })
+      .exec();
+    const priceDetails = await productPriceModel.findOne({ product: pid });
+    return res
+      .status(200)
+      .json({ success: true, data: { product, priceDetails } });
   } catch (err) {
     return res.status(500).json({ success: false, err });
   }
@@ -52,4 +80,5 @@ async function addMultipleProduct(req, res, next) {
 module.exports = {
   getProducts: getProducts,
   addMultipleProduct,
+  productDetails,
 };
